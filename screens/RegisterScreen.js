@@ -2,6 +2,8 @@ import { View, KeyboardAvoidingView, StyleSheet } from "react-native";
 import React, { useState } from "react";
 import { StatusBar } from "expo-status-bar";
 import { Button, Input, Text } from "@rneui/base";
+import { auth } from "../firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState("");
@@ -9,7 +11,18 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
-  const register = () => {};
+  const register = () => {
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(() => {
+        updateProfile(auth.currentUser, {
+          displayName: name,
+          photoURL: imageUrl || "",
+        });
+
+        navigation.replace("Home");
+      })
+      .catch((err) => alert(err.message));
+  };
   return (
     <KeyboardAvoidingView behavior="padding" style={styles.container}>
       <StatusBar style="light" />
@@ -35,7 +48,7 @@ const RegisterScreen = ({ navigation }) => {
           type="password"
           secureTextEntry
           value={password}
-          onChangeText={(text) => setPassword(password)}
+          onChangeText={(text) => setPassword(text)}
         />
         <Input
           placeholder="Profile Picture URL (optional)"
