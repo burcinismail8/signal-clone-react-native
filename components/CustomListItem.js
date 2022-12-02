@@ -2,8 +2,7 @@ import { View, Text } from "react-native";
 import React from "react";
 import { Avatar, ListItem } from "@rneui/base";
 
-const CustomListItem = ({ id, data }) => {
-  const enterChat = (id, chatName) => {};
+const CustomListItem = ({ id, data, enterChat }) => {
   return (
     <ListItem onPress={() => enterChat(id, data.chatName)} bottomDivider>
       <Avatar

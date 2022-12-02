@@ -68,12 +68,24 @@ const HomeScreen = ({ navigation }) => {
     getDocuments();
   }, []);
 
+  const enterChat = (id, chatName) => {
+    navigation.navigate("Chat", {
+      id,
+      chatName,
+    });
+  };
+
   return (
     <View>
       <StatusBar />
       <ScrollView>
         {chats.map((chat, index) => (
-          <CustomListItem key={index} id={chat.id} data={chat.data} />
+          <CustomListItem
+            key={index}
+            id={chat.id}
+            data={chat.data}
+            enterChat={enterChat}
+          />
         ))}
         <Button
           title="logout"
