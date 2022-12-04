@@ -21,6 +21,7 @@ import {
   doc,
   FieldValue,
   getDocs,
+  orderBy,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
@@ -75,7 +76,7 @@ const ChatScreen = ({ navigation, route }) => {
         </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, messages]);
 
   const sendMessage = async () => {
     Keyboard.dismiss();
@@ -84,32 +85,29 @@ const ChatScreen = ({ navigation, route }) => {
     }
     const message = input.slice(0);
     setInput("");
-
+    console.log(message);
     const docRef = await collection(db, "chats", route.params.id, "messages");
-    await setDoc(docRef, {
+    await addDoc(docRef, {
       timestamp: serverTimestamp(),
       message: message,
       displayName: auth.currentUser.displayName,
       email: auth.currentUser.email,
       photoURL: auth.currentUser.photoURL,
     });
+    getMessages();
+  };
+  const getMessages = async () => {
+    const querySnapshot = await getDocs(
+      collection(db, "chats", route.params.id, "messages")
+    );
+    let messagesData = [];
+    querySnapshot.forEach((doc) => {
+      messagesData.push({ id: doc.id, data: doc.data() });
+    });
+    setMessages(messagesData);
   };
 
   useLayoutEffect(() => {
-    const getMessages = async () => {
-      const querySnapshot = await getDocs(
-        collection(db, "chats", route.params.id, "messages")
-      );
-      let messagesData = [];
-
-      querySnapshot.forEach((doc) => {
-        console.log(doc.data());
-        messagesData.push({ id: doc.id, data: doc.data() });
-      });
-
-      setMessages(messagesData);
-    };
-
     getMessages();
   }, [route]);
   return (
@@ -122,7 +120,48 @@ const ChatScreen = ({ navigation, route }) => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
-            <ScrollView></ScrollView>
+            <ScrollView contentContainerStyle={Keyboard.dismiss}>
+              {messages.map(({ id, data }) =>
+                data.email === auth.currentUser.email ? (
+                  <View style={styles.reciever} key={id}>
+                    <Avatar
+                      position="absolute"
+                      rounded
+                      containerStyle={{
+                        position: "absolute",
+                        bottom: -15,
+                        right: -5,
+                      }}
+                      bottom={-15}
+                      right={-5}
+                      size={30}
+                      source={{ uri: data.photoURL }}
+                    />
+                    <Text style={styles.recieverText}>{data.message}</Text>
+                  </View>
+                ) : (
+                  <View key={id} style={styles.sender}>
+                    <Avatar
+                      position="absolute"
+                      containerStyle={{
+                        position: "absolute",
+                        bottom: -15,
+                        left: -5,
+                      }}
+                      bottom={-15}
+                      left={-5}
+                      rounded
+                      size={30}
+                      source={{
+                        uri: data.photoURL,
+                      }}
+                    />
+                    <Text style={styles.senderText}>{data.message}</Text>
+                    <Text style={styles.senderName}>{data.displayName}</Text>
+                  </View>
+                )
+              )}
+            </ScrollView>
             <View style={styles.footer}>
               <TextInput
                 value={input}
@@ -147,6 +186,33 @@ export default ChatScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+
+  reciever: {
+    padding: 15,
+    backgroundColor: "#ECECEC",
+    alignSelf: "flex-end",
+    borderRadius: 20,
+    marginRight: 15,
+    marginBottom: 20,
+    maxWidth: "80%",
+    position: "relative",
+  },
+  sender: {
+    padding: 15,
+    backgroundColor: "#2B68E6",
+    alignSelf: "flex-start",
+    borderRadius: 20,
+    marginRight: 15,
+    marginBottom: 20,
+    maxWidth: "80%",
+    position: "relative",
+  },
+  senderName: {
+    left: 10,
+    paddingRight: 10,
+    fontSize: 10,
+    color: "white",
   },
   footer: {
     flexDirection: "row",
